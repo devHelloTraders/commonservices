@@ -1,0 +1,119 @@
+plugins {
+	id 'java'
+	id "idea"
+	id "eclipse"
+	id "maven-publish"
+	id "com.gorylenko.gradle-git-properties"
+	alias(libs.plugins.spring.boot)
+}
+
+group = 'com.traders.hello'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(23)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springCloudVersion', "2023.0.3")
+}
+
+// Remove Spring Boot and other unnecessary plugins
+apply plugin: 'io.spring.dependency-management'
+
+// Dependencies for common configurations
+dependencies {
+	implementation "com.fasterxml.jackson.datatype:jackson-datatype-hppc"
+	implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+
+	implementation "io.micrometer:micrometer-registry-prometheus-simpleclient"
+	implementation "jakarta.annotation:jakarta.annotation-api"
+	implementation "org.apache.commons:commons-lang3"
+	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+	implementation "org.springframework.boot:spring-boot-loader-tools"
+	implementation "org.springframework.boot:spring-boot-starter-actuator"
+	implementation "org.springframework.boot:spring-boot-starter-aop"
+	implementation "org.springframework.boot:spring-boot-starter-logging"
+
+	implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
+	implementation "org.springframework.boot:spring-boot-starter-security"
+
+	implementation "org.springframework.boot:spring-boot-starter-validation"
+	implementation "org.springframework.boot:spring-boot-starter-web"
+	implementation "org.springframework.cloud:spring-cloud-starter"
+
+	implementation "org.springframework.retry:spring-retry"
+	implementation platform(libs.spring.cloud.dependencies)
+	implementation libs.springdoc.openapi.starter.webmvc.api
+	implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+	implementation "org.springframework.cloud:spring-cloud-starter-openfeign"
+
+	implementation "com.fasterxml.jackson.module:jackson-module-jaxb-annotations"
+
+	implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
+	implementation 'javax.cache:cache-api:1.1.1'
+
+	compileOnly 'org.projectlombok:lombok'
+	compileOnly 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate6"
+	implementation 'org.redisson:redisson:3.37.0'
+	implementation 'org.hibernate.orm:hibernate-jcache:6.6.1.Final'
+	implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
+	implementation 'org.liquibase:liquibase-core:4.29.2'
+
+
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+// Task to build the JAR
+tasks.named('jar') {
+	manifest {
+		attributes(
+				'Implementation-Title': project.name,
+				'Implementation-Version': project.version
+		)
+	}
+}
+
+task cleanResources(type: Delete) {
+	delete "build/resources"
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+			groupId = 'com.traders.hello'
+			artifactId = 'commonService'
+			version = '0.0.1-SNAPSHOT'
+		}
+	}
+	repositories {
+		maven {
+			url = uri('file://${project.buildDir}/repo') // For local publishing
+		}
+	}
+}
+
